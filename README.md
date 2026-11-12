@@ -1,12 +1,5 @@
 # Nova – Municipal AI Assistant for the Energy Transition
 
-![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-teal.svg)
-![React](https://img.shields.io/badge/React-19-cyan.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-6-blue.svg)
-![ChromaDB](https://img.shields.io/badge/vector%20store-ChromaDB-orange.svg)
-![Ollama](https://img.shields.io/badge/LLM-Mistral%20via%20Ollama-lightgrey.svg)
-
 Built by a team of five at the **Black Forest Hackathon** (8–10 May 2026) for the challenge
 *"Municipal AI Assistant: Taming Documents, Accelerating the Energy Transition"*.
 
@@ -21,15 +14,15 @@ and semi-automatically fills municipal templates (Excel, Word, PDF forms) from t
 
 I built the retrieval and answer-generation core of the RAG pipeline (`backend/rag_chain.py`):
 
-- **Retrieval layer:** searches both ChromaDB collections (knowledge base and additional documents),
+- **Retrieval layer** - searches both ChromaDB collections (knowledge base and additional documents),
   merges and ranks the results by cosine distance, and keeps the top 5 passages.
-- **"Ich weiß es nicht" gate:** converts distances to similarity scores and applies a relevance threshold.
+- **"Ich weiß es nicht" gate** - converts distances to similarity scores and applies a relevance threshold.
   If no passage clears it, the assistant says it doesn't know and asks for more context, without calling the LLM.
-- **Grounded generation:** the German system prompt and answer template that require a source
+- **Grounded generation** - the German system prompt and answer template that require a source
   (document, page) after every claim, direct quotes in quotation marks, and an explicit "ICH WEISS ES NICHT"
   when the passages don't contain the answer. Mistral is called through Ollama with low temperature
   and capped context and output lengths.
-- **Citations and uncertainty flag:** returns structured citations (file, page, excerpt, relevance score)
+- **Citations and uncertainty flag** - returns structured citations (file, page, excerpt, relevance score)
   to the UI and detects when the model itself flags uncertainty.
 
 The same pipeline also powers template filling, where each detected field is answered as its own RAG query.
@@ -56,19 +49,19 @@ The source documents and the target users are German, so the interface and all a
 
 ## Features
 
-- **Cited answers.** Every statement in an answer references its source document and page;
+- **Cited answers** - Every statement in an answer references its source document and page;
   the UI shows the retrieved passages as citation cards with their relevance scores.
-- **"Ich weiß es nicht" mechanism.** If nothing relevant is retrieved, or the model can't answer
+- **"Ich weiß es nicht" mechanism** - If nothing relevant is retrieved, or the model can't answer
   from the passages, the assistant says so and asks for more documents or a more specific question
   instead of guessing.
-- **Two knowledge sources.** A curated *knowledge base* plus *additional documents* that users attach
+- **Two knowledge sources** - A curated *knowledge base* plus *additional documents* that users attach
   directly in the chat or upload on the dashboard. Retrieval searches both and ranks the results together.
-- **Knowledge base management.** Upload, delete and re-index documents (PDF, DOCX, XLSX) from the UI.
+- **Knowledge base management** - Upload, delete and re-index documents (PDF, DOCX, XLSX) from the UI.
   Files placed in the data folders are indexed automatically when the backend starts.
-- **Template filling with a human in the loop.** Upload a template; Nova detects the fields,
+- **Template filling with a human in the loop** - Upload a template; Nova detects the fields,
   fills each one via RAG, and marks it as *filled*, *uncertain* or *needs input*. The user reviews
   and completes the gaps, then exports the finished file with its sources attached.
-- **Self-hosted AI.** No third-party AI APIs: the LLM is served through Ollama on your own
+- **Self-hosted AI** - No third-party AI APIs: the LLM is served through Ollama on your own
   hardware and embeddings are computed inside the backend.
 
 ---
@@ -102,30 +95,30 @@ flowchart LR
 
 ## Design Choices
 
-**Grounding over fluency.** The system prompt requires a source after every important statement
+**Grounding over fluency** - The system prompt requires a source after every important statement
 (`(document, page X)`), direct quotes in quotation marks, and answers based only on the retrieved
 passages. Temperature is kept at 0.1 for consistent, factual output.
 
-**Two layers of uncertainty.** Uncertainty is caught before *and* after generation:
+**Two layers of uncertainty** - Uncertainty is caught before *and* after generation:
 1. *Retrieval gate:* passages are converted to a cosine similarity score; if none clears the threshold,
    the LLM isn't called at all and the user gets "ICH WEISS ES NICHT" plus a request for more context.
 2. *Model self-report:* the prompt tells the model to answer "ICH WEISS ES NICHT" when the passages
    don't contain the answer; the backend detects this and the UI highlights the answer as uncertain.
 
-**Multilingual embeddings for German legal text.** Documents are embedded with
+**Multilingual embeddings for German legal text** - Documents are embedded with
 `sentence-transformers/paraphrase-multilingual-mpnet-base-v2`, which handles German well and runs
 in-process, so document text never leaves the backend for embedding.
 
-**Context-preserving chunking.** Legal and planning documents have long, connected passages, so chunks are
+**Context-preserving chunking** - Legal and planning documents have long, connected passages, so chunks are
 large (2,000 characters) with a 200-character overlap. Each chunk stores its file, page (or Excel sheet),
 chunk index and character offsets, which is what makes page-level citations possible.
 
-**Human-in-the-loop template filling.** Each detected field becomes its own RAG query. The top citation's
+**Human-in-the-loop template filling** - Each detected field becomes its own RAG query. The top citation's
 relevance score is used as a confidence value, and every field gets a status. Users fill or correct what
 the model couldn't, and the export keeps the sources: Excel cells get a comment with the source, and Word
 placeholders get an inline `[Quelle: …]`.
 
-**Built to swap models and hosting.** The LLM endpoint and model are set through environment variables,
+**Built to swap models and hosting** - The LLM endpoint and model are set through environment variables,
 so the same app can run against a local Ollama, an on-premise GPU server or a European-hosted model.
 
 ---
@@ -203,17 +196,17 @@ Open http://localhost:5173. The dev server forwards `/api` calls to the backend 
 The hackathon documents were provided privately and are **not** part of this repository,
 so the knowledge base starts empty. Add your own documents in either of these ways:
 
-- **In the app:** open **Wissensbasis**, choose *Knowledge base* or *Additional documents*, and upload
+- **In the app** - open **Wissensbasis**, choose *Knowledge base* or *Additional documents*, and upload
   PDF, DOCX or XLSX files. You can also attach documents directly in the chat.
-- **On disk:** put files into `municipal-ai-assistant/backend/data/knowledge_base/` or
+- **On disk** - put files into `municipal-ai-assistant/backend/data/knowledge_base/` or
   `.../data/additional_documents/` and restart the backend. They are indexed automatically on startup.
 
 ### 5. Fill a template
 
 Open **Vorlagen ausfüllen** and upload a template. Nova recognises:
 
-- **Word / Excel:** placeholders written as `{{Feldname}}`, `[FELDNAME]` or `___`
-- **PDF:** fillable form fields (AcroForm)
+- **Word / Excel** - placeholders written as `{{Feldname}}`, `[FELDNAME]` or `___`
+- **PDF** - fillable form fields (AcroForm)
 
 Review the suggested values, fill in anything marked as uncertain or missing, and export the completed file.
 
@@ -278,9 +271,9 @@ BlackForestHackathon/
 
 ## Troubleshooting
 
-- **Chat answers fail or time out:** check that the Ollama endpoint in `OLLAMA_BASE_URL` is reachable
+- **Chat answers fail or time out** - check that the Ollama endpoint in `OLLAMA_BASE_URL` is reachable
   and serves the model in `CHAT_MODEL` (`curl <OLLAMA_BASE_URL>/api/tags`).
-- **Every answer is "Ich weiß es nicht":** the knowledge base is probably empty. Upload documents first,
+- **Every answer is "Ich weiß es nicht"** - the knowledge base is probably empty. Upload documents first,
   or check the backend log for the startup indexing summary.
-- **First backend start is slow:** the embedding model is being downloaded; later starts are fast.
-- **Frontend can't reach the API:** make sure the backend is running on port 8000.
+- **First backend start is slow** - the embedding model is being downloaded; later starts are fast.
+- **Frontend can't reach the API** - make sure the backend is running on port 8000.
