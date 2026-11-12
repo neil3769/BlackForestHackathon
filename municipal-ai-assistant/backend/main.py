@@ -17,7 +17,6 @@ from pydantic import BaseModel
 
 import config
 import ingestion
-from agent import run_agent
 from rag_chain import answer_question
 from template_filler import (
     TemplateField,
@@ -52,7 +51,6 @@ _template_sessions: dict[str, dict[str, Any]] = {}
 
 class ChatRequest(BaseModel):
     question: str
-    use_agent: bool = True  # use LangGraph agent (True) or simple RAG (False)
 
 
 class CitationOut(BaseModel):
@@ -111,8 +109,7 @@ def chat(req: ChatRequest):
     if not req.question.strip():
         raise HTTPException(status_code=400, detail="Frage darf nicht leer sein.")
 
-    # Always use direct RAG for reliable, complete answers with Mistral 7B.
-    # The LangGraph agent path is kept as opt-in only (use_agent=True AND agent available).
+    # Retrieval-augmented answer with citations and uncertainty flag.
     result = answer_question(req.question)
 
     return ChatResponse(

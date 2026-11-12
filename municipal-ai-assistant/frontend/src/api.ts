@@ -43,10 +43,9 @@ export interface TemplateAnalysis {
 
 // ── API calls ─────────────────────────────────────────────────────────────────
 
-export async function sendChat(question: string, useAgent = true): Promise<ChatResponse> {
+export async function sendChat(question: string): Promise<ChatResponse> {
   const res = await axios.post<ChatResponse>(`${BASE}/chat`, {
     question,
-    use_agent: useAgent,
   });
   return res.data;
 }
